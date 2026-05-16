@@ -1,4 +1,4 @@
-# ascii-overlay
+# ascii-art
  
 A browser-based tool that overlays ASCII art on top of any image — no installs, no dependencies, runs entirely in your browser.
   
