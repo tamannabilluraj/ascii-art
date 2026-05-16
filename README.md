@@ -2,7 +2,7 @@
  
 A browser-based tool that overlays ASCII art on top of any image — no installs, no dependencies, runs entirely in your browser.
  
-**[→ Try it live]([https://yourusername.github.io/ascii-overlay/)]**
+**[→ Try it live]([https://tamannabilluraj.github.io/ascii-overlay/)]**
  
 ![banner](images/ascii-art-banner.png)
 
