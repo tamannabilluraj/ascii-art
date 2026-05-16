@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASCII Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --border2: #2e2e2e;
+    --text: #e8e6e0;
+    --text2: #888880;
+    --text3: #444440;
+    --accent: #c8f060;
+    --accent2: #a0d040;
+    --danger: #ff4444;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --radius: 8px;
+    --radius-lg: 14px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: .08em;
+  }
+  .logo span { color: var(--text2); }
+  header h1 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+  }
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--accent);
+    color: #0a0a0a;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: .06em;
+    font-weight: 700;
+  }
+
+  /* Layout */
+  .app {
+    display: flex;
+    flex: 1;
+    gap: 0;
+    height: calc(100vh - 61px);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 300px;
+    min-width: 300px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* Panel sections */
+  .panel {
+    border-bottom: 1px solid var(--border);
+    padding: 1.2rem 1.4rem;
+  }
+  .panel-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  /* Drop zone */
+  .dropzone {
+    border: 1.5px dashed var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+  }
+  .dropzone:hover, .dropzone.over {
+    border-color: var(--accent);
+    background: rgba(200,240,96,.04);
+  }
+  .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .dropzone-icon {
+    font-family: var(--mono);
+    font-size: 28px;
+    color: var(--text3);
+    display: block;
+    margin-bottom: .5rem;
+  }
+  .dropzone p { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .dropzone small { font-size: 11px; color: var(--text3); }
+  #filename {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: .5rem;
+    word-break: break-all;
+    display: none;
+  }
+
+  /* Controls */
+  .control { margin-bottom: 1.1rem; }
+  .control:last-child { margin-bottom: 0; }
+  .control-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .4rem;
+  }
+  label {
+    font-size: 12px;
+    color: var(--text2);
+    font-family: var(--sans);
+  }
+  .val {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* Range */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--border2);
+    border-radius: 1px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform .15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  /* Select */
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: .5rem .75rem;
+    border-radius: var(--radius);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .75rem center;
+  }
+  select:focus { border-color: var(--accent); }
+
+  /* Color swatches */
+  .swatches {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color .15s, transform .15s;
+    position: relative;
+  }
+  .swatch:hover { transform: scale(1.1); }
+  .swatch.active { border-color: var(--accent); }
+  .swatch-custom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: var(--surface2);
+    border: 1px dashed var(--border2);
+    color: var(--text3);
+    overflow: hidden;
+  }
+  .swatch-custom input[type=color] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Toggle switch */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .toggle-label { font-size: 12px; color: var(--text2); }
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border2);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .toggle input:checked + .toggle-track { background: var(--accent); }
+  .toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s;
+    pointer-events: none;
+  }
+  .toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .04em;
+    padding: .65rem 1.1rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: none;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0a0a;
+    width: 100%;
+    font-weight: 700;
+  }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    width: 100%;
+  }
+  .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+  .btn-ghost:disabled { opacity: .35; cursor: not-allowed; }
+
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { flex: 1; }
+
+  /* Canvas area */
+  .canvas-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    padding: 2rem;
+  }
+
+  .canvas-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text3);
+    text-align: center;
+  }
+  .canvas-placeholder .big-text {
+    font-family: var(--mono);
+    font-size: 60px;
+    line-height: 1;
+    letter-spacing: -.04em;
+    opacity: .15;
+  }
+  .canvas-placeholder p { font-size: 13px; }
+
+  #output-canvas {
+    max-width: 100%;
+    max-height: calc(100vh - 140px);
+    border-radius: var(--radius-lg);
+    display: none;
+    box-shadow: 0 0 80px rgba(0,0,0,.8);
+  }
+
+  #preview-canvas { display: none; }
+
+  .canvas-toolbar {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    display: flex;
+    gap: 6px;
+  }
+  .tool-btn {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: .4rem .7rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+    letter-spacing: .04em;
+  }
+  .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .status-bar {
+    position: absolute;
+    bottom: 1.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: .3rem .8rem;
+    border-radius: 20px;
+    white-space: nowrap;
+    transition: opacity .3s;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,10,.85);
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 10;
+  }
+  .progress-wrap.show { display: flex; }
+  .progress-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    letter-spacing: .06em;
+  }
+  .progress-bar-wrap {
+    width: 200px;
+    height: 2px;
+    background: var(--border2);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .1s;
+    border-radius: 1px;
+  }
+
+  /* Segment control */
+  .seg-control {
+    display: flex;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2px;
+    gap: 2px;
+  }
+  .seg-btn {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: .4rem .3rem;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    letter-spacing: .02em;
+    text-align: center;
+  }
+  .seg-btn.active {
+    background: var(--surface);
+    color: var(--accent);
+    border: 1px solid var(--border2);
+  }
+
+  /* Hint text */
+  .hint { font-size: 11px; color: var(--text3); margin-top: .4rem; line-height: 1.5; }
+
+  /* Separator */
+  .sep { height: 1px; background: var(--border); margin: .8rem 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">[<span>ascii</span>]</div>
+  <h1>ASCII Overlay</h1>
+  <div class="badge">TOOL</div>
+</header>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <!-- Upload -->
+    <div class="panel">
+      <div class="panel-label">01 — Image</div>
+      <div class="dropzone" id="drop" ondragover="onDrag(event,'over')" ondragleave="onDrag(event,'leave')" ondrop="onDrop(event)">
+        <span class="dropzone-icon">[↑]</span>
+        <p>Drop image here</p>
+        <small>or click to browse</small>
+        <div id="filename"></div>
+        <input type="file" id="file-input" accept="image/*" onchange="loadFile(this.files[0])">
+      </div>
+      <div class="sep"></div>
+      <div class="toggle-row">
+        <span class="toggle-label">Convert to grayscale first</span>
+        <label class="toggle">
+          <input type="checkbox" id="grayscale">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+      <p class="hint" style="margin-top:.5rem;">Grayscale gives a more uniform, classic ASCII look.</p>
+    </div>
+
+    <!-- Charset -->
+    <div class="panel">
+      <div class="panel-label">02 — Character Set</div>
+      <div class="control">
+        <div class="seg-control" id="charset-seg">
+          <button class="seg-btn" onclick="setCharset('binary')">01</button>
+          <button class="seg-btn active" onclick="setCharset('detailed')">Detailed</button>
+          <button class="seg-btn" onclick="setCharset('blocks')">Blocks</button>
+          <button class="seg-btn" onclick="setCharset('simple')">Simple</button>
+        </div>
+      </div>
+      <p class="hint" id="charset-hint">Full character ramp for rich shading depth.</p>
+    </div>
+
+    <!-- Placement -->
+    <div class="panel">
+      <div class="panel-label">03 — Placement</div>
+      <div class="control">
+        <label>Where to draw ASCII</label>
+        <select id="zone" style="margin-top:.4rem;">
+          <option value="all">Entire image</option>
+          <option value="subject">Subject only (bright areas)</option>
+          <option value="bg">Background only (dark areas)</option>
+        </select>
+      </div>
+      <div class="control">
+        <div class="control-row">
+          <label>Subject threshold</label>
+          <span class="val" id="thresh-val">30%</span>
+        </div>
+        <input type="range" id="threshold" min="5" max="90" value="30" oninput="updateVal('thresh-val', this.value+'%')">
+        <p class="hint">Pixels brighter than this = subject.</p>
+      </div>
+    </div>
+
+    <!-- Density & Size -->
+    <div class="panel">
+      <div class="panel-label">04 — Density & Size</div>
+      <div class="control">
+        <div class="control-row">
+          <label>Character spacing</label>
+          <span class="val" id="step-val">10px</span>
+        </div>
+        <input type="range" id="step" min="4" max="30" value="10" oninput="updateVal('step-val', this.value+'px')">
+        <p class="hint">Smaller = denser, bigger = sparse.</p>
+      </div>
+      <div class="control">
+        <div class="control-row">
+          <label>Font size</label>
+          <span class="val" id="size-val">9px</span>
+        </div>
+        <input type="range" id="font-size" min="5" max="24" value="9" oninput="updateVal('size-val', this.value+'px')">
+      </div>
+      <div class="control">
+        <div class="control-row">
+          <label>Opacity</label>
+          <span class="val" id="opacity-val">80%</span>
+        </div>
+        <input type="range" id="opacity" min="10" max="100" value="80" oninput="updateVal('opacity-val', this.value+'%')">
+      </div>
+    </div>
+
+    <!-- Color -->
+    <div class="panel">
+      <div class="panel-label">05 — Color</div>
+      <div class="control">
+        <div class="swatches">
+          <div class="swatch active" style="background:#ffffff" data-color="255,255,255" onclick="setSwatch(this)" title="White"></div>
+          <div class="swatch" style="background:#c8f060" data-color="200,240,96" onclick="setSwatch(this)" title="Lime"></div>
+          <div class="swatch" style="background:#00ffaa" data-color="0,255,170" onclick="setSwatch(this)" title="Matrix green"></div>
+          <div class="swatch" style="background:#00d4ff" data-color="0,212,255" onclick="setSwatch(this)" title="Cyan"></div>
+          <div class="swatch" style="background:#ff6b35" data-color="255,107,53" onclick="setSwatch(this)" title="Orange"></div>
+          <div class="swatch" style="background:#ff3366" data-color="255,51,102" onclick="setSwatch(this)" title="Pink"></div>
+          <div class="swatch" style="background:#ffde00" data-color="255,222,0" onclick="setSwatch(this)" title="Yellow"></div>
+          <div class="swatch" style="background:#000000;border-color:var(--border2)" data-color="0,0,0" onclick="setSwatch(this)" title="Black"></div>
+          <div class="swatch swatch-custom" title="Custom color">
+            +
+            <input type="color" id="custom-color" value="#ffffff" onchange="setCustomColor(this.value)">
+          </div>
+        </div>
+      </div>
+      <div class="control">
+        <div class="toggle-row">
+          <span class="toggle-label">Brightness-adaptive opacity</span>
+          <label class="toggle">
+            <input type="checkbox" id="adaptive" checked>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <p class="hint" style="margin-top:.4rem;">Brighter pixels = more opaque characters.</p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="panel" style="border-bottom:none;">
+      <div class="panel-label">06 — Render</div>
+      <button class="btn btn-primary" id="render-btn" onclick="renderArt()" disabled>GENERATE</button>
+      <div style="height:8px;"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="download-btn" onclick="downloadOutput()" disabled>DOWNLOAD PNG</button>
+        <button class="btn btn-ghost" id="reset-btn" onclick="resetAll()" disabled>RESET</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Canvas -->
+  <main class="canvas-area" id="canvas-area">
+    <div class="canvas-placeholder" id="placeholder">
+      <div class="big-text">01</div>
+      <p>Upload an image to get started</p>
+    </div>
+    <canvas id="output-canvas"></canvas>
+    <canvas id="preview-canvas"></canvas>
+
+    <!-- Toolbar -->
+    <div class="canvas-toolbar" id="toolbar" style="display:none;">
+      <button class="tool-btn" onclick="toggleOriginal()" id="compare-btn">SHOW ORIGINAL</button>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar" id="status">ready</div>
+
+    <!-- Progress overlay -->
+    <div class="progress-wrap" id="progress">
+      <div class="progress-label" id="progress-label">RENDERING...</div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// State
+let sourceImg = null;
+let currentColor = '255,255,255';
+let currentCharset = 'detailed';
+let showingOriginal = false;
+let originalImageData = null;
+let previewTimer = null;
+let isFullRender = false;
+// Cached downscaled pixel data for fast preview
+let previewPixels = null;
+let previewW = 0, previewH = 0;
+
+const PREVIEW_SCALE = 1.0; // preview at full display size
+
+const charsets = {
+  binary:   ['0','1'],
+  detailed: [' ','.',':','-','=','+','*','#','%','@','$','&','8','B','M','W'].concat(
+    [' ','`',"'",'^','"',',',';','I','l','!','i','>','<','~','+','_','-','?',']','[','}','{','1',')',
+     '(','|','/','t','f','j','r','x','n','u','v','c','z','X','Y','U','J','C','L','Q','0','O','Z',
+     'm','w','q','p','d','b','k','h','a','o','*','#','M','W','&','8','%','B','@','$']
+  ),
+  blocks:   [' ','░','░','▒','▒','▓','▓','█','█'],
+  simple:   [' ','.',':','+','*','#','@']
+};
+
+const charsetHints = {
+  binary:   'Only 0s and 1s. Clean, digital, code-like.',
+  detailed: 'Full character ramp for rich shading depth.',
+  blocks:   'Block characters for chunky, pixel-art feel.',
+  simple:   'Minimal set, bold contrast, fewer details.'
+};
+
+function updateVal(id, val) {
+  document.getElementById(id).textContent = val;
+  schedulePreview();
+}
+
+function setCharset(name) {
+  currentCharset = name;
+  document.querySelectorAll('.seg-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['binary','detailed','blocks','simple'][i] === name);
+  });
+  document.getElementById('charset-hint').textContent = charsetHints[name];
+  schedulePreview();
+}
+
+function setSwatch(el) {
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  currentColor = el.dataset.color;
+  schedulePreview();
+}
+
+function setCustomColor(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  currentColor = `${r},${g},${b}`;
+  const custom = document.querySelector('.swatch-custom');
+  custom.style.background = hex;
+  custom.dataset.color = currentColor;
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  custom.classList.add('active');
+  schedulePreview();
+}
+
+function onDrag(e, t) {
+  e.preventDefault();
+  document.getElementById('drop').classList.toggle('over', t==='over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop').classList.remove('over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) loadFile(file);
+}
+
+function loadFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      sourceImg = img;
+      document.getElementById('filename').textContent = file.name;
+      document.getElementById('filename').style.display = 'block';
+      document.getElementById('render-btn').disabled = false;
+      document.getElementById('reset-btn').disabled = false;
+
+      // Pre-cache downscaled pixel data for fast previews
+      cachePreviewPixels();
+
+      // Show initial preview immediately
+      schedulePreview(0);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function cachePreviewPixels() {
+  // Cache source image at full display resolution for accurate full-size preview
+  const area = document.getElementById('canvas-area');
+  const maxW = area.clientWidth - 64;
+  const maxH = window.innerHeight - 140;
+  const dispScale = Math.min(1, maxW/sourceImg.width, maxH/sourceImg.height);
+  previewW = Math.round(sourceImg.width * dispScale);
+  previewH = Math.round(sourceImg.height * dispScale);
+  const tmp = document.createElement('canvas');
+  tmp.width = previewW;
+  tmp.height = previewH;
+  tmp.getContext('2d').drawImage(sourceImg, 0, 0, previewW, previewH);
+  previewPixels = tmp.getContext('2d').getImageData(0, 0, previewW, previewH).data;
+  setStatus(`loaded: ${sourceImg.width}×${sourceImg.height}px`);
+}
+
+// --- Live preview (debounced, low-res) ---
+function schedulePreview(delay = 120) {
+  if (!sourceImg || isFullRender) return;
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => renderCore(true), delay);
+}
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+// Core render — shared between preview and full
+// preview=true: renders at PREVIEW_SCALE into output canvas (fast, no progress overlay)
+// preview=false: renders at full display res with progress overlay
+async function renderCore(preview = false) {
+  if (!sourceImg) return;
+
+  const grayscale = document.getElementById('grayscale').checked;
+  const zone = document.getElementById('zone').value;
+  const threshold = parseInt(document.getElementById('threshold').value) / 100;
+  const step = parseInt(document.getElementById('step').value);
+  const fontSize = parseInt(document.getElementById('font-size').value);
+  const opacity = parseInt(document.getElementById('opacity').value) / 100;
+  const adaptive = document.getElementById('adaptive').checked;
+  const charset = charsets[currentCharset];
+  const [cr,cg,cb] = currentColor.split(',').map(Number);
+
+  const area = document.getElementById('canvas-area');
+  const maxW = area.clientWidth - 64;
+  const maxH = window.innerHeight - 140;
+  const dispScale = Math.min(1, maxW/sourceImg.width, maxH/sourceImg.height);
+  const fullW = Math.round(sourceImg.width * dispScale);
+  const fullH = Math.round(sourceImg.height * dispScale);
+
+  const renderScale = preview ? PREVIEW_SCALE : 1;
+  const W = Math.round(fullW * renderScale);
+  const H = Math.round(fullH * renderScale);
+
+  const outCanvas = document.getElementById('output-canvas');
+
+  if (!preview) {
+    isFullRender = true;
+    showProgress(true, 'PREPARING IMAGE...');
+    setProgress(5);
+    await tick();
+  }
+
+  // Build pixel source
+  let pixels, srcW, srcH;
+  if (preview) {
+    // Use cached preview pixels
+    pixels = previewPixels;
+    srcW = previewW;
+    srcH = previewH;
+  } else {
+    const sampleCanvas = document.createElement('canvas');
+    sampleCanvas.width = sourceImg.width;
+    sampleCanvas.height = sourceImg.height;
+    sampleCanvas.getContext('2d').drawImage(sourceImg, 0, 0);
+    pixels = sampleCanvas.getContext('2d').getImageData(0, 0, sourceImg.width, sourceImg.height).data;
+    srcW = sourceImg.width;
+    srcH = sourceImg.height;
+  }
+
+  // Size the output canvas
+  outCanvas.width = W;
+  outCanvas.height = H;
+  const ctx = outCanvas.getContext('2d');
+
+  // Base image
+  if (preview) {
+    // Draw from cached preview pixels directly
+    const imgData = ctx.createImageData(W, H);
+    if (grayscale) {
+      for (let i = 0; i < pixels.length; i += 4) {
+        const avg = 0.299*pixels[i] + 0.587*pixels[i+1] + 0.114*pixels[i+2];
+        imgData.data[i] = imgData.data[i+1] = imgData.data[i+2] = avg;
+        imgData.data[i+3] = pixels[i+3];
+      }
+    } else {
+      imgData.data.set(pixels);
+    }
+    ctx.putImageData(imgData, 0, 0);
+  } else {
+    if (!preview) { setProgress(15); showProgress(true, 'DRAWING BASE IMAGE...'); await tick(); }
+    if (grayscale) {
+      ctx.drawImage(sourceImg, 0, 0, W, H);
+      const imgData = ctx.getImageData(0, 0, W, H);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const avg = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        d[i] = d[i+1] = d[i+2] = avg;
+      }
+      ctx.putImageData(imgData, 0, 0);
+    } else {
+      ctx.drawImage(sourceImg, 0, 0, W, H);
+    }
+    originalImageData = ctx.getImageData(0, 0, W, H);
+  }
+
+  if (!preview) { setProgress(30); showProgress(true, 'OVERLAYING ASCII...'); await tick(); }
+
+  // Scale font for preview
+  const scaledFont = preview ? Math.max(4, Math.round(fontSize * PREVIEW_SCALE)) : fontSize;
+  const scaledStep = preview ? Math.max(2, Math.round(step * PREVIEW_SCALE)) : step;
+
+  ctx.font = `bold ${scaledFont}px 'Space Mono', monospace`;
+  ctx.textBaseline = 'top';
+
+  const scaleX = srcW / W;
+  const scaleY = srcH / H;
+  const totalPx = Math.ceil(H/scaledStep) * Math.ceil(W/scaledStep);
+  let drawn = 0;
+  const batchSize = preview ? 99999 : 500; // preview: no yielding, full: yield for progress
+
+  for (let y = 0; y < H; y += scaledStep) {
+    for (let x = 0; x < W; x += scaledStep) {
+      const sx = Math.min(Math.round(x * scaleX), srcW - 1);
+      const sy = Math.min(Math.round(y * scaleY), srcH - 1);
+      const idx = (sy * srcW + sx) * 4;
+      const r = pixels[idx], g = pixels[idx+1], b = pixels[idx+2];
+      const brightness = (0.299*r + 0.587*g + 0.114*b) / 255;
+
+      let draw = false;
+      if (zone === 'all') draw = true;
+      else if (zone === 'subject') draw = brightness > threshold;
+      else draw = brightness <= threshold;
+
+      if (draw) {
+        const charIdx = Math.floor(brightness * (charset.length - 1));
+        const char = charset[charIdx];
+        if (char !== ' ') {
+          let alpha = opacity;
+          if (adaptive) alpha = Math.min(opacity, 0.15 + brightness * opacity);
+          ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha})`;
+          ctx.fillText(char, x, y);
+        }
+      }
+      drawn++;
+      if (!preview && drawn % batchSize === 0) {
+        setProgress(30 + Math.round((drawn/totalPx) * 65));
+        await tick();
+      }
+    }
+  }
+
+  outCanvas.style.display = 'block';
+  document.getElementById('placeholder').style.display = 'none';
+
+  if (preview) {
+    setStatus(`preview · ${currentCharset} · step:${step}px — hit GENERATE for download`);
+  } else {
+    setProgress(100);
+    await tick();
+    showProgress(false);
+    isFullRender = false;
+    document.getElementById('download-btn').disabled = false;
+    document.getElementById('toolbar').style.display = 'flex';
+    setStatus(`rendered — ${W}×${H}px · ${currentCharset} · step:${step}px`);
+  }
+}
+
+async function renderArt() {
+  if (!sourceImg) return;
+  clearTimeout(previewTimer);
+  await renderCore(false);
+}
+
+function showProgress(show, label='') {
+  const wrap = document.getElementById('progress');
+  wrap.classList.toggle('show', show);
+  if (label) document.getElementById('progress-label').textContent = label;
+}
+
+function setProgress(pct) {
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function tick() {
+  return new Promise(r => setTimeout(r, 0));
+}
+
+function downloadOutput() {
+  // Re-render at full res into a temp canvas before downloading
+  if (!sourceImg) return;
+  renderCore(false).then(() => {
+    const canvas = document.getElementById('output-canvas');
+    const a = document.createElement('a');
+    a.download = 'ascii-overlay.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  });
+}
+
+function toggleOriginal() {
+  const canvas = document.getElementById('output-canvas');
+  const ctx = canvas.getContext('2d');
+  const btn = document.getElementById('compare-btn');
+  if (showingOriginal) {
+    btn.textContent = 'SHOW ORIGINAL';
+    showingOriginal = false;
+    renderCore(false);
+  } else {
+    if (!originalImageData) return;
+    ctx.putImageData(originalImageData, 0, 0);
+    btn.textContent = 'SHOW RESULT';
+    showingOriginal = true;
+  }
+}
+
+function resetAll() {
+  sourceImg = null;
+  originalImageData = null;
+  previewPixels = null;
+  showingOriginal = false;
+  isFullRender = false;
+  clearTimeout(previewTimer);
+  const canvas = document.getElementById('output-canvas');
+  canvas.style.display = 'none';
+  document.getElementById('placeholder').style.display = 'flex';
+  document.getElementById('toolbar').style.display = 'none';
+  document.getElementById('filename').style.display = 'none';
+  document.getElementById('filename').textContent = '';
+  document.getElementById('render-btn').disabled = true;
+  document.getElementById('download-btn').disabled = true;
+  document.getElementById('reset-btn').disabled = true;
+  document.getElementById('file-input').value = '';
+  document.getElementById('grayscale').checked = false;
+  setStatus('ready');
+}
+
+// Wire up all controls to trigger live preview
+document.addEventListener('DOMContentLoaded', () => {
+  ['threshold','step','font-size','opacity'].forEach(id => {
+    document.getElementById(id).addEventListener('input', schedulePreview);
+  });
+  ['zone','grayscale','adaptive'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      if (id === 'grayscale') cachePreviewPixels && sourceImg && cachePreviewPixels();
+      schedulePreview();
+    });
+  });
+});
+
+// Init
+setStatus('ready — upload an image to begin');
+</script>
+</body>
+</html>
