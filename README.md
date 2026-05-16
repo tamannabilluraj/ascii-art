@@ -18,6 +18,12 @@ A browser-based tool that overlays ASCII art on top of any image — no installs
 - Live preview as you adjust settings
 - Download the result as a PNG
 
+## Screenshots
+
+![output](images/ascii-op.png)
+![ui1](images/ss1.png)
+![ui2](images/ss2.png)
+
 ## Stack
  
 Vanilla HTML, CSS, and JavaScript
