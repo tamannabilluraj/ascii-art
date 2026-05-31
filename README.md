@@ -1,6 +1,6 @@
 # ascii-art
  
-A browser-based tool that overlays ASCII art on top of any image, no installs, no dependencies, runs entirely in your browser.
+A browser based tool that overlays ASCII art on top of any image, no installs, no dependencies, runs entirely in your browser.
   
 ![banner](images/ascii-art-banner.png)
 
